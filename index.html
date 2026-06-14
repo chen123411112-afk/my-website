@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>音乐馆 · </title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #1b1118;
+    --velvet: #2e1c2c;
+    --velvet-light: #3f2a3d;
+    --gold: #d9a857;
+    --gold-soft: #f0ce8e;
+    --pink: #f0a8bc;
+    --cream: #f8ecdd;
+    --muted: #bfa3ac;
+    --line: rgba(248,236,221,0.12);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(217,168,87,0.10), transparent 55%),
+      var(--ink);
+    color:var(--cream);
+    font-family:'Quicksand', sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .wrap{ max-width:880px; margin:0 auto; padding:0 24px; }
+
+  /* ---------- HERO ---------- */
+  header.hero{ padding:64px 0 40px; }
+
+  .marquee{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.78rem;
+    letter-spacing:0.12em;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:36px;
+  }
+  .marquee span.live{ color:var(--gold-soft); }
+  .marquee .dot{
+    display:inline-block; width:7px; height:7px; border-radius:50%;
+    background:var(--pink); margin-right:8px;
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+  .hero-title{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:clamp(2.6rem, 8vw, 4.6rem);
+    line-height:1.05;
+    letter-spacing:-0.01em;
+  }
+  .hero-title em{
+    font-style:italic;
+    font-weight:300;
+    color:var(--gold-soft);
+  }
+  .hero-sub{
+    margin-top:14px;
+    color:var(--muted);
+    font-size:1.02rem;
+    max-width:34ch;
+  }
+
+  /* ---------- TURNTABLE ---------- */
+  .stage{
+    margin-top:48px;
+    background:var(--velvet);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:36px;
+    display:flex;
+    gap:36px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+
+  .turntable{
+    position:relative;
+    width:180px; height:180px;
+    flex-shrink:0;
+  }
+
+  .vinyl{
+    width:180px; height:180px;
+    border-radius:50%;
+    background:
+      repeating-radial-gradient(circle at center,
+        #161015 0px, #161015 2px,
+        #221a20 2px, #221a20 4px);
+    box-shadow: inset 0 0 0 1px rgba(248,236,221,0.06), 0 18px 30px -14px rgba(0,0,0,0.7);
+    display:flex; align-items:center; justify-content:center;
+    transform-origin:center;
+    animation:spin 6s linear infinite;
+    animation-play-state:paused;
+  }
+  .vinyl.spinning{ animation-play-state:running; }
+
+  .label{
+    width:74px; height:74px;
+    border-radius:50%;
+    background: linear-gradient(155deg, var(--gold-soft), var(--gold) 60%, #b9863a);
+    position:relative;
+    box-shadow:0 0 0 3px var(--ink), 0 0 0 4px rgba(248,236,221,0.08);
+  }
+  .label::before{
+    content:"";
+    position:absolute; inset:0; margin:auto;
+    width:7px; height:7px; border-radius:50%;
+    background:var(--ink);
+    top:50%; left:50%; transform:translate(-50%,-50%);
+  }
+  .label .ear{
+    position:absolute; top:-7px;
+    width:0; height:0;
+    border-left:11px solid transparent;
+    border-right:11px solid transparent;
+    border-bottom:16px solid var(--gold);
+  }
+  .label .ear.l{ left:6px; transform:rotate(-18deg); }
+  .label .ear.r{ right:6px; transform:rotate(18deg); }
+  .label .eyes{
+    position:absolute; top:32px; left:50%; transform:translateX(-50%);
+    width:36px; display:flex; justify-content:space-between;
+  }
+  .label .eyes span{
+    width:6px; height:8px; border-radius:50%;
+    background:var(--ink);
+  }
+  .label .nose{
+    position:absolute; top:44px; left:50%; transform:translateX(-50%);
+    width:0; height:0;
+    border-left:4px solid transparent;
+    border-right:4px solid transparent;
+    border-top:5px solid var(--pink);
+  }
+
+  .tonearm{
+    position:absolute;
+    top:-14px; right:-22px;
+    width:96px; height:96px;
+    transform-origin: 88px 8px;
+    transform: rotate(-32deg);
+    transition: transform 0.6s cubic-bezier(.4,0,.2,1);
+  }
+  .tonearm.down{ transform: rotate(-8deg); }
+  .tonearm::before{
+    content:"";
+    position:absolute; top:6px; right:6px;
+    width:84px; height:5px; border-radius:3px;
+    background: linear-gradient(90deg, var(--gold-soft), var(--muted));
+    transform-origin:right center;
+  }
+  .tonearm::after{
+    content:"";
+    position:absolute; top:1px; left:0;
+    width:14px; height:14px; border-radius:4px;
+    background:var(--pink);
+  }
+
+  .now-playing{ flex:1; min-width:200px; }
+  .np-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .np-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.6rem;
+    margin-bottom:4px;
+    min-height:1.2em;
+  }
+  .np-artist{ color:var(--gold-soft); font-size:0.92rem; margin-bottom:18px; }
+
+  .progress{
+    height:4px; border-radius:2px;
+    background:rgba(248,236,221,0.1);
+    overflow:hidden;
+    cursor:pointer;
+    position:relative;
+  }
+  .progress-fill{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, var(--gold), var(--pink));
+    transition:width 0.2s linear;
+  }
+  .progress:hover .progress-fill{
+    filter:brightness(1.15);
+  }
+  .time-row{
+    display:flex; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.7rem; color:var(--muted);
+    margin-top:6px;
+  }
+
+  /* ---------- CONTROLS ---------- */
+  .controls{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin-top:20px;
+  }
+  .ctrl-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:50%;
+    color:var(--cream);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    flex-shrink:0;
+  }
+  .ctrl-btn:hover{ border-color:var(--gold-soft); background:var(--velvet-light); }
+  .ctrl-btn:active{ transform:scale(0.92); }
+  .ctrl-btn.skip{ width:36px; height:36px; font-size:1rem; }
+  .ctrl-btn.main{ width:48px; height:48px; font-size:1.3rem; background:var(--gold); border-color:var(--gold); color:var(--ink); }
+  .ctrl-btn.main:hover{ background:var(--gold-soft); border-color:var(--gold-soft); }
+
+  .speed-wrap{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:14px;
+    justify-content:flex-end;
+  }
+  .speed-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.1em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  .speed-btn{
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--muted);
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.7rem;
+    padding:3px 8px;
+    cursor:pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .speed-btn:hover{ border-color:var(--gold-soft); color:var(--cream); }
+  .speed-btn.active{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
+
+  /* ---------- SETLIST ---------- */
+  .section{ padding:64px 0; }
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:28px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;
+  }
+  .section-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.7rem;
+  }
+  .section-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.12em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  .track{
+    display:grid;
+    grid-template-columns:36px 1fr auto 60px;
+    align-items:center;
+    gap:18px;
+    padding:16px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:background 0.25s;
+    border:1px solid transparent;
+  }
+  .track:hover{ background:var(--velvet); }
+  .track:focus-visible{
+    outline:2px solid var(--gold-soft);
+    outline-offset:2px;
+  }
+  .track.active{
+    background:var(--velvet-light);
+    border-color:var(--line);
+  }
+
+  .track-num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.85rem;
+    color:var(--muted);
+  }
+  .track.active .track-num{ color:var(--gold-soft); }
+
+  .track-info .t-title{
+    font-size:1.02rem;
+    font-weight:600;
+  }
+  .track-info .t-desc{
+    font-size:0.85rem;
+    color:var(--muted);
+    margin-top:2px;
+  }
+
+  .track-dur{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.82rem;
+    color:var(--muted);
+  }
+
+  .track-play{
+    width:36px; height:36px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--cream);
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.9rem;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .track.active .track-play{
+    background:var(--gold);
+    color:var(--ink);
+    border-color:var(--gold);
+  }
+  .track:hover .track-play{ border-color:var(--gold-soft); }
+
+  .hint{
+    margin-top:8px;
+    font-size:0.82rem;
+    color:var(--muted);
+  }
+
+  /* ---------- ABOUT ---------- */
+  .about{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+    align-items:start;
+  }
+  .about h2{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.7rem;
+    margin-bottom:14px;
+  }
+  .about p{ color:var(--muted); font-size:0.96rem; }
+  .about p + p{ margin-top:12px; }
+
+  .rules{
+    background:var(--velvet);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:24px;
+  }
+  .rules h3{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.1rem;
+    margin-bottom:14px;
+    color:var(--gold-soft);
+  }
+  .rules ul{ list-style:none; }
+  .rules li{
+    padding:8px 0;
+    border-bottom:1px solid var(--line);
+    font-size:0.9rem;
+    color:var(--muted);
+    display:flex; gap:10px;
+  }
+  .rules li:last-child{ border-bottom:none; }
+  .rules li::before{ content:"🐾"; flex-shrink:0; }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:1px solid var(--line);
+    padding:28px 0 48px;
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.1em;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:680px){
+    .about{ grid-template-columns:1fr; }
+    .track{ grid-template-columns:28px 1fr 60px; }
+    .track-dur{ display:none; }
+    .stage{ padding:24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .vinyl{ animation:none; }
+    .vinyl.spinning{ transform:rotate(8deg); }
+    .marquee .dot{ animation:none; }
+    .tonearm{ transition:none; }
+  }
+
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="marquee">
+      <span><span class="dot"></span><span class="live">音乐馆</span></span>
+      <span></span>
+    </div>
+    <h1 class="hero-title">音乐馆<br><em>。。。</em></h1>
+    <p class="hero-sub"></p>
+  </header>
+
+  <div class="stage">
+    <div class="turntable">
+      <div class="vinyl" id="vinyl">
+        <div class="label">
+          <div class="ear l"></div>
+          <div class="ear r"></div>
+          <div class="eyes"><span></span><span></span></div>
+          <div class="nose"></div>
+        </div>
+      </div>
+      <div class="tonearm" id="tonearm"></div>
+    </div>
+    <div class="now-playing">
+      <div class="np-label">正在播放</div>
+      <div class="np-title" id="npTitle">— 暂停中，请点歌 —</div>
+      <div class="np-artist" id="npArtist">点击下方曲目试听</div>
+      <div class="progress" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="time-row"><span id="timeNow">0:00</span><span id="timeTotal">0:00</span></div>
+
+      <div class="controls">
+        <button class="ctrl-btn skip" id="btnPrev" aria-label="上一首">⏮</button>
+        <button class="ctrl-btn main" id="btnPlay" aria-label="播放/暂停">▶</button>
+        <button class="ctrl-btn skip" id="btnNext" aria-label="下一首">⏭</button>
+      </div>
+
+      <div class="speed-wrap">
+        <span class="speed-label">速度</span>
+        <button class="speed-btn" data-speed="0.75">0.75×</button>
+        <button class="speed-btn active" data-speed="1">1×</button>
+        <button class="speed-btn" data-speed="1.5">1.5×</button>
+        <button class="speed-btn" data-speed="2">2×</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="section" id="setlist">
+    <div class="section-head">
+      <h2 class="section-title">歌单</h2>
+      <span class="section-tag">06 首 · 凌晨场</span>
+    </div>
+
+    <div class="track" tabindex="0" data-title="离开我的依赖" data-artist="歌手:王燕薇" data-dur="233" data-src="track1.mp3">
+      <span class="track-num">01</span>
+      <div class="track-info">
+        <div class="t-title">离开我的依赖</div>
+        <div class="t-desc"></div>
+      </div>
+      <span class="track-dur">3:53</span>
+      <button class="track-play" aria-label="播放 离开我的依赖">▶</button>
+    </div>
+
+    <div class="track" tabindex="0" data-title="玻璃" data-artist="歌手:呃呃不知道谁唱的" data-dur="185" data-src="track2.mp3">
+      <span class="track-num">02</span>
+      <div class="track-info">
+        <div class="t-title">玻璃</div>
+        <div class="t-desc"></div>
+      </div>
+      <span class="track-dur">3:05</span>
+      <button class="track-play" aria-label="播放 玻璃">▶</button>
+    </div>
+
+    <div class="track" tabindex="0" data-title="与火星的孩子对话" data-artist="歌手:华晨宇" data-dur="329" data-src="track3.mp3">
+      <span class="track-num">03</span>
+      <div class="track-info">
+        <div class="t-title">与火星的孩子对话</div>
+        <div class="t-desc"></div>
+      </div>
+      <span class="track-dur">5:29</span>
+      <button class="track-play" aria-label="播放 与火星的孩子对话">▶</button>
+    </div>
+
+    <div class="track" tabindex="0" data-title="谁" data-artist="歌手:曲肖冰" data-dur="278" data-src="track4.mp3">
+      <span class="track-num">04</span>
+      <div class="track-info">
+        <div class="t-title">谁</div>
+        <div class="t-desc"></div>
+      </div>
+      <span class="track-dur">4:35</span>
+      <button class="track-play" aria-label="播放 谁">▶</button>
+    </div>
+
+    <div class="track" tabindex="0" data-title="爱错" data-artist="歌手:王力宏" data-dur="239" data-src="track5.mp3">
+      <span class="track-num">05</span>
+      <div class="track-info">
+        <div class="t-title">爱错</div>
+        <div class="t-desc"></div>
+      </div>
+      <span class="track-dur">3:59</span>
+      <button class="track-play" aria-label="爱错">▶</button>
+    </div>
+
+    <div class="track" tabindex="0" data-title="病态的爱" data-artist="歌手:哈利白特" data-dur="201" data-src="track6.mp3">
+      <span class="track-num">06</span>
+      <div class="track-info">
+        <div class="t-title">病态的爱</div>
+        <div class="t-desc"></div>
+      </div>
+      <span class="track-dur">3:21</span>
+      <button class="track-play" aria-label="播放 病态的爱">▶</button>
+    </div>
+
+    <p class="hint">随缘</p>
+  </section>
+
+  <section class="section about">
+    <div>
+      <h2>关于本音乐馆</h2>
+      <p>作者 陈栖</p>
+    </div>
+    <div class="rules">
+      <h3></h3>
+      <ul>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>音乐馆 · 来自 2026.6.13 营业至今</span>
+    <span></span>
+  </footer>
+
+</div>
+
+<audio id="player" preload="none"></audio>
+
+<script>
+  const vinyl      = document.getElementById('vinyl');
+  const tonearm    = document.getElementById('tonearm');
+  const npTitle    = document.getElementById('npTitle');
+  const npArtist   = document.getElementById('npArtist');
+  const progressFill = document.getElementById('progressFill');
+  const progressBar  = document.getElementById('progressBar');
+  const timeNow    = document.getElementById('timeNow');
+  const timeTotal  = document.getElementById('timeTotal');
+  const btnPlay    = document.getElementById('btnPlay');
+  const btnPrev    = document.getElementById('btnPrev');
+  const btnNext    = document.getElementById('btnNext');
+  const tracks     = document.querySelectorAll('.track');
+  const player     = document.getElementById('player');
+  const speedBtns  = document.querySelectorAll('.speed-btn');
+
+  const trackList = Array.from(tracks);
+  let currentIndex = -1;
+  let isPlaying    = false;
+  let isSrcMode    = false;
+  let simElapsed   = 0;
+  let simDur       = 0;
+  let simTimer     = null;
+  let audioCtx     = null;
+  let playbackRate = 1;
+
+  function formatTime(sec){
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + String(s).padStart(2,'0');
+  }
+
+  function setPlayBtn(playing){
+    btnPlay.textContent = playing ? '⏸' : '▶';
+  }
+
+  function setSpinning(on){
+    vinyl.classList.toggle('spinning', on);
+    tonearm.classList.toggle('down', on);
+  }
+
+  function stopAll(){
+    player.pause();
+    player.ontimeupdate = null;
+    player.onended = null;
+    if (simTimer) { clearInterval(simTimer); simTimer = null; }
+  }
+
+  function resetProgress(){
+    progressFill.style.width = '0%';
+    timeNow.textContent = '0:00';
+  }
+
+  const motifs = {
+    "离开我的依赖": [392, 466.16, 523.25, 587.33],
+    "玻璃": [523.25, 392, 659.25, 392],
+    "与火星的孩子对话": [349.23, 440, 523.25],
+    "谁": [293.66, 349.23, 440, 349.23],
+    "爱错": [659.25, 587.33, 523.25, 659.25, 783.99],
+    "病态的爱": [220, 261.63, 246.94, 220]
+  };
+
+  function playMotif(title){
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const notes = motifs[title] || [440];
+    const noteLen = 0.22;
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = audioCtx.currentTime + i * noteLen;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.12, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + noteLen);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t); osc.stop(t + noteLen);
+    });
+  }
+
+  function startSim(){
+    simTimer = setInterval(() => {
+      simElapsed += playbackRate;
+      const pct = Math.min(100, (simElapsed / simDur) * 100);
+      progressFill.style.width = pct + '%';
+      timeNow.textContent = formatTime(simElapsed);
+      if (simElapsed >= simDur) onTrackEnded();
+    }, 1000);
+  }
+
+  function onTrackEnded(){
+    stopAll();
+    setSpinning(false);
+    isPlaying = false;
+    setPlayBtn(false);
+    const next = currentIndex + 1;
+    if (next < trackList.length) {
+      loadTrack(next, true);
+    } else {
+      npTitle.textContent = '— 播放结束 —';
+      npArtist.textContent = '已播完全部曲目';
+      currentIndex = -1;
+    }
+  }
+
+  function loadTrack(index, autoPlay){
+    if (index < 0 || index >= trackList.length) return;
+    stopAll();
+
+    currentIndex = index;
+    const track  = trackList[index];
+
+    trackList.forEach(t => t.classList.remove('active'));
+    track.classList.add('active');
+    trackList.forEach(t => {
+      const pb = t.querySelector('.track-play');
+      if (pb) pb.textContent = '▶';
+    });
+
+    const title  = track.dataset.title;
+    const artist = track.dataset.artist;
+    const dur    = parseInt(track.dataset.dur, 10);
+    const src    = track.dataset.src;
+
+    npTitle.textContent  = title;
+    npArtist.textContent = artist;
+    timeTotal.textContent = formatTime(dur);
+    resetProgress();
+
+    isSrcMode = !!(src);
+
+    if (isSrcMode) {
+      player.src = src;
+      player.currentTime = 0;
+      player.playbackRate = playbackRate;
+      player.ontimeupdate = () => {
+        const d = player.duration && !isNaN(player.duration) ? player.duration : dur;
+        progressFill.style.width = Math.min(100, (player.currentTime / d) * 100) + '%';
+        timeNow.textContent = formatTime(player.currentTime);
+      };
+      player.onended = onTrackEnded;
+      if (autoPlay) { player.play(); isPlaying = true; }
+      else { isPlaying = false; }
+    } else {
+      simElapsed = 0;
+      simDur = dur;
+      playMotif(title);
+      if (autoPlay) { startSim(); isPlaying = true; }
+      else { isPlaying = false; }
+    }
+
+    setSpinning(autoPlay);
+    setPlayBtn(autoPlay);
+  }
+
+  function togglePlay(){
+    if (currentIndex === -1) { loadTrack(0, true); return; }
+    if (isPlaying) {
+      if (isSrcMode) player.pause();
+      else { if (simTimer) { clearInterval(simTimer); simTimer = null; } }
+      setSpinning(false); setPlayBtn(false); isPlaying = false;
+    } else {
+      if (isSrcMode) player.play();
+      else startSim();
+      setSpinning(true); setPlayBtn(true); isPlaying = true;
+    }
+  }
+
+  progressBar.addEventListener('click', (e) => {
+    if (currentIndex === -1) return;
+    const rect = progressBar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    if (isSrcMode && player.duration) {
+      player.currentTime = ratio * player.duration;
+    } else {
+      simElapsed = Math.floor(ratio * simDur);
+      timeNow.textContent = formatTime(simElapsed);
+      progressFill.style.width = (ratio * 100) + '%';
+    }
+  });
+
+  let dragging = false;
+  progressBar.addEventListener('mousedown', () => { dragging = true; });
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging || currentIndex === -1) return;
+    const rect = progressBar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    progressFill.style.width = (ratio * 100) + '%';
+    const target = isSrcMode && player.duration ? ratio * player.duration : ratio * simDur;
+    timeNow.textContent = formatTime(target);
+  });
+  document.addEventListener('mouseup', (e) => {
+    if (!dragging || currentIndex === -1) { dragging = false; return; }
+    dragging = false;
+    const rect = progressBar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    if (isSrcMode && player.duration) {
+      player.currentTime = ratio * player.duration;
+    } else {
+      simElapsed = Math.floor(ratio * simDur);
+    }
+  });
+
+  btnPlay.addEventListener('click', togglePlay);
+  btnPrev.addEventListener('click', () => {
+    const prev = currentIndex <= 0 ? trackList.length - 1 : currentIndex - 1;
+    loadTrack(prev, true);
+  });
+  btnNext.addEventListener('click', () => {
+    const next = currentIndex >= trackList.length - 1 ? 0 : currentIndex + 1;
+    loadTrack(next, true);
+  });
+
+  speedBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      speedBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      playbackRate = parseFloat(btn.dataset.speed);
+      if (isSrcMode) player.playbackRate = playbackRate;
+    });
+  });
+
+  trackList.forEach((track, index) => {
+    track.addEventListener('click', () => loadTrack(index, true));
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        loadTrack(index, true);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
